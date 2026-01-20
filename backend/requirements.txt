@@ -1,5 +1,6 @@
 fastapi
 uvicorn
-pydantic
-python-dotenv
 pyzk
+sqlalchemy
+pymysql
+python-dotenv

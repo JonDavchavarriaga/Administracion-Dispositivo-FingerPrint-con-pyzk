@@ -9,6 +9,7 @@ Backend desarrollado en **Python + FastAPI** para la gestión de dispositivos bi
 El proyecto sigue una arquitectura por capas:
 
 backend/
+
 ├── app/
 │ ├── domain/ # Modelos de dominio
 │ ├── application/ # Casos de uso / servicios
