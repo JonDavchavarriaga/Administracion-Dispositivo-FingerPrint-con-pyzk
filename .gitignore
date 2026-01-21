@@ -9,7 +9,8 @@ __pycache__/
 # =========================
 # Virtual environments
 # =========================
-venv/
+.venv/
+backend/.venv/
 .env/
 .env.local
 .env.dev
