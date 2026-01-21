@@ -1,14 +1,16 @@
-from app.infrastructure.api.attendance_api import create_app
-from app.application.scheduler_service import SchedulerService
-from app.application.device_sync_service import DeviceSyncService
-from app.infrastructure.repositories.device_config_repository import DeviceConfigRepository
-from app.infrastructure.repositories.attendance_repository import AttendanceRepository
-from app.application.attendance_service import AttendanceService
+from src.infrastructure.api.attendance_api import create_app
+from src.application.scheduler_service import SchedulerService
+from src.application.device_sync_service import DeviceSyncService
+from src.infrastructure.repositories.mysql.device_config_repository_mysql import DeviceConfigRepositoryMySQL
+from src.infrastructure.repositories.mysql.attendance_repository_mysql import AttendanceRepositoryMySQL
+from src.application.attendance_service import AttendanceService
+from src.infrastructure.repositories.mysql.database import init_db
 
+init_db()
 
 def main():
-    device_repo = DeviceConfigRepository()
-    attendance_repo = AttendanceRepository()
+    device_repo = DeviceConfigRepositoryMySQL()
+    attendance_repo = AttendanceRepositoryMySQL()
 
     attendance_service = AttendanceService(attendance_repo)
     sync_service = DeviceSyncService(device_repo, attendance_service)

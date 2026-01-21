@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.application.attendance_service import AttendanceService
-from app.application.device_config_service import DeviceConfigService
+from src.application.attendance_service import AttendanceService
+from src.application.device_config_service import DeviceConfigService
 
 
 class DeviceRegisterRequest(BaseModel):
@@ -20,6 +20,7 @@ def create_app(device_repo, attendance_repo, sync_service):
 
     @app.post("/devices")
     def register_device(request: DeviceRegisterRequest):
+        print("POST /devices ejecutado")
         device = device_service.register_device(
             name=request.name,
             ip=request.ip,
@@ -44,10 +45,4 @@ def create_app(device_repo, attendance_repo, sync_service):
     return app
 
 
-"""
-{
-    "ip": "192.168.1.100",
-    "port": 4370,
-    "interval_seconds": 60
-}
-"""
+

@@ -1,7 +1,7 @@
 from datetime import datetime
 from random import choice
 
-from app.infrastructure.devices.base_device import FingerprintDevice
+from src.infrastructure.devices.base_device import FingerprintDevice
 
 class MockFingerprintDevice(FingerprintDevice):
     """"

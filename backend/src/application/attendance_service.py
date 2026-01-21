@@ -1,20 +1,22 @@
-from app.domain.models.attendance_record import AttendanceRecord
+from src.domain.models.attendance_record import AttendanceRecord
 
 
 class AttendanceService:
     def __init__(self, repository):
         self.repository = repository
 
-    def process_record(self, raw_record, device_id: int):
-        last_timestamp = self.repository.get_last_timestamp_by_device(device_id)
+    def process_record(self, *, user_id: int, device_id: int, timestamp):
+        """
+        Guarda la marcación solo si no existe
+        """
 
-        if last_timestamp and raw_record.timestamp <= last_timestamp:
+        if self.repository.exists(user_id, device_id, timestamp):
             return
 
         record = AttendanceRecord(
-            user_id=raw_record.user_id,
+            user_id=user_id,
             device_id=device_id,
-            timestamp=raw_record.timestamp
+            timestamp=timestamp
         )
 
         self.repository.save(record)

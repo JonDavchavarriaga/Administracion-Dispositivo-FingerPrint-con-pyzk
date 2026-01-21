@@ -1,5 +1,5 @@
 from zk import ZK
-from app.infrastructure.devices.base_device import FingerprintDevice
+from src.infrastructure.devices.base_device import FingerprintDevice
 
 
 class ZKFingerprintDevice(FingerprintDevice):

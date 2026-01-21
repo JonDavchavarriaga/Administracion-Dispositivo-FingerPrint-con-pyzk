@@ -1,4 +1,4 @@
-from app.domain.models.device_config import DeviceConfig
+from src.domain.models.device_config import DeviceConfig
 
 
 class DeviceConfigService:
