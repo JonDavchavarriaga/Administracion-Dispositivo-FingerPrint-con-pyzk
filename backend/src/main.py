@@ -5,15 +5,18 @@ from src.infrastructure.repositories.mysql.device_config_repository_mysql import
 from src.infrastructure.repositories.mysql.attendance_repository_mysql import AttendanceRepositoryMySQL
 from src.application.attendance_service import AttendanceService
 from src.infrastructure.repositories.mysql.database import init_db
+from src.application.user_service import UserService
+from src.infrastructure.repositories.mysql.user_repository_mysql import UserRepositoryMySQL
 
 init_db()
 
 def main():
     device_repo = DeviceConfigRepositoryMySQL()
     attendance_repo = AttendanceRepositoryMySQL()
+    user_repo = UserRepositoryMySQL()
 
     attendance_service = AttendanceService(attendance_repo)
-    sync_service = DeviceSyncService(device_repo, attendance_service)
+    sync_service = DeviceSyncService(device_repo, attendance_service,user_repo)
 
     scheduler = SchedulerService(device_repo, sync_service)
     scheduler.start()
