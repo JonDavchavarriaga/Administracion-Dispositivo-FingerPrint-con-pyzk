@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getAttendance } from "../api/client";
+import { getAttendance } from "../api/attendance.api";
+
 
 export default function Attendance() {
   const [records, setRecords] = useState([]);      // SIEMPRE array

@@ -8,6 +8,8 @@ from src.infrastructure.repositories.mysql.database import init_db
 from src.application.user_service import UserService
 from src.infrastructure.repositories.mysql.user_repository_mysql import UserRepositoryMySQL
 
+from fastapi.middleware.cors import CORSMiddleware
+
 init_db()
 
 def main():
@@ -16,7 +18,7 @@ def main():
     user_repo = UserRepositoryMySQL()
 
     attendance_service = AttendanceService(attendance_repo)
-    sync_service = DeviceSyncService(device_repo, attendance_service,user_repo)
+    sync_service = DeviceSyncService(device_repo, attendance_service, user_repo)
 
     scheduler = SchedulerService(device_repo, sync_service)
     scheduler.start()
@@ -26,6 +28,15 @@ def main():
         attendance_repo=attendance_repo,
         sync_service=sync_service
     )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     return app
 
 
