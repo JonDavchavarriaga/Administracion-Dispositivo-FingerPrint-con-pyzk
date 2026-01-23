@@ -18,7 +18,8 @@ def main():
     user_repo = UserRepositoryMySQL()
 
     attendance_service = AttendanceService(attendance_repo)
-    sync_service = DeviceSyncService(device_repo, attendance_service, user_repo)
+    user_service= UserService(user_repo)
+    sync_service = DeviceSyncService(device_repo, attendance_service, user_service)
 
     scheduler = SchedulerService(device_repo, sync_service)
     scheduler.start()
