@@ -6,9 +6,9 @@ services:
     container_name: huellero-backend
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    network_mode: host
     restart: unless-stopped
+
 
   frontend:
     build: ./frontend
