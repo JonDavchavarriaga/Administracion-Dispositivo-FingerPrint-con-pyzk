@@ -15,8 +15,8 @@ class ZKFingerprintDevice(FingerprintDevice):
             port=self.port,
             timeout=self.timeout,
             password=0,
-            force_udp=False,
-            ommit_ping=False
+            force_udp=True,
+            ommit_ping=True
         )
         self.conn = zk.connect()
         print(f"[ZK] Conectado a {self.ip}")

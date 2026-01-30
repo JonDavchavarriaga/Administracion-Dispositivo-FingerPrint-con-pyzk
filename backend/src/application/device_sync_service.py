@@ -3,6 +3,7 @@ from src.infrastructure.devices.zk_device import ZKFingerprintDevice
 
 
 class DeviceSyncService:
+
     def __init__(self, device_repo, attendance_service, user_service):
         self.device_repo = device_repo
         self.attendance_service = attendance_service
@@ -27,25 +28,23 @@ class DeviceSyncService:
             user_map = {}
             for u in users:
                 user = self.user_service.find_or_create_from_device(
-                    external_id=str(u.user_id),
-                    name=u.name
+                    external_id=str(u["user_id"]),
+                    name=u["name"]
                 )
-                user_map[str(u.user_id)] = user
+                user_map[str(u["user_id"])] = user
 
             #========== Marcaciones =======
             records = zk_device.get_attendance()
 
             for r in records:
-                user = user_map.get(str(r.user_id))
+                user = user_map.get(str(r["user_id"]))
                 if not user:
                     continue
 
                 self.attendance_service.process_record(
                     user_id=user.user_id,
                     device_id=device.device_id,
-                    timestamp=r.timestamp
+                    timestamp=r["timestamp"]
                 )
-
         finally:
             zk_device.disconnect()
-
