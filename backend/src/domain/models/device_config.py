@@ -6,11 +6,13 @@ class DeviceConfig:
         ip,
         port,
         interval_seconds,
-        active=True
+        is_active=True,
+        last_sync_at=None
     ):
         self.device_id = device_id
         self.name = name
         self.ip = ip
         self.port = port
         self.interval_seconds = interval_seconds
-        self.active = active
+        self.is_active = is_active
+        self.last_sync_at = last_sync_at

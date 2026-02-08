@@ -1,9 +1,11 @@
+from datetime import datetime
+from src.application.ports.device_config_repository import DeviceConfigRepository
 from src.infrastructure.repositories.mysql.database import SessionLocal
 from src.infrastructure.repositories.mysql.models import DeviceTable
 from src.domain.models.device_config import DeviceConfig
 
 
-class DeviceConfigRepositoryMySQL:
+class DeviceConfigRepositoryMySQL(DeviceConfigRepository):
 
     def save(self, device: DeviceConfig) -> DeviceConfig:
         db = SessionLocal()
@@ -13,7 +15,8 @@ class DeviceConfigRepositoryMySQL:
                 ip=device.ip,
                 port=device.port,
                 interval_seconds=device.interval_seconds,
-                active=device.active
+                is_active=device.is_active,
+                last_sync_at=device.last_sync_at
             )
             db.add(model)
             db.commit()
@@ -27,18 +30,41 @@ class DeviceConfigRepositoryMySQL:
     def find_all(self):
         db = SessionLocal()
         try:
-            rows = db.query(DeviceTable).all()
             return [
-                DeviceConfig(
-                    device_id=r.id,
-                    name=r.name,
-                    ip=r.ip,
-                    port=r.port,
-                    interval_seconds=r.interval_seconds,
-                    active=r.active
-                )
-                for r in rows
+                self._to_domain(r)
+                for r in db.query(DeviceTable).all()
             ]
+        finally:
+            db.close()
+
+    def find_active(self):
+        db = SessionLocal()
+        try:
+            return [
+                self._to_domain(r)
+                for r in db.query(DeviceTable)
+                .filter(DeviceTable.is_active == True)
+                .all()
+            ]
+        finally:
+            db.close()
+
+    def update(self, device: DeviceConfig) -> DeviceConfig:
+        db = SessionLocal()
+        try:
+            model = db.query(DeviceTable).get(device.device_id)
+            if not model:
+                raise ValueError("Device not found")
+
+            model.name = device.name
+            model.ip = device.ip
+            model.port = device.port
+            model.interval_seconds = device.interval_seconds
+            model.is_active = device.is_active
+            model.last_sync_at = device.last_sync_at
+
+            db.commit()
+            return device
         finally:
             db.close()
 
@@ -46,38 +72,40 @@ class DeviceConfigRepositoryMySQL:
         db = SessionLocal()
         try:
             r = db.query(DeviceTable).filter(DeviceTable.id == device_id).first()
-            if not r:
-                return None
-            return DeviceConfig(
-                device_id=r.id,
-                name=r.name,
-                ip=r.ip,
-                port=r.port,
-                interval_seconds=r.interval_seconds,
-                active=r.active
-            )
+            return self._to_domain(r) if r else None
         finally:
             db.close()
 
-    def find_active(self):
+    def update_last_sync(self, device_id: int):
         db = SessionLocal()
         try:
-            rows = (
-                db.query(DeviceTable)
-                .filter(DeviceTable.active == True)
-                .all()
-            )
-
-            return [
-                DeviceConfig(
-                    device_id=r.id,
-                    name=r.name,
-                    ip=r.ip,
-                    port=r.port,
-                    interval_seconds=r.interval_seconds,
-                    active=r.active
-                )
-                for r in rows
-            ]
+            device = db.query(DeviceTable).get(device_id)
+            if device:
+                device.last_sync_at = datetime.now()
+                db.commit()
         finally:
             db.close()
+
+    def deactivate(self, device_id: int):
+        db = SessionLocal()
+        try:
+            model = db.query(DeviceTable).get(device_id)
+            if not model:
+                raise ValueError("Device not found")
+
+            db.delete(model)
+            db.commit()
+        finally:
+            db.close()
+
+    def _to_domain(self, r: DeviceTable) -> DeviceConfig:
+        return DeviceConfig(
+            device_id=r.id,
+            name=r.name,
+            ip=r.ip,
+            port=r.port,
+            interval_seconds=r.interval_seconds,
+            is_active=r.is_active,
+            last_sync_at=r.last_sync_at
+        )
+

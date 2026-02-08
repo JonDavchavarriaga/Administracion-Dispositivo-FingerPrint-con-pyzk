@@ -1,5 +1,5 @@
 from src.domain.models.attendance_record import AttendanceRecord
-
+from datetime import datetime
 
 class AttendanceService:
     def __init__(self, repository):
@@ -16,7 +16,8 @@ class AttendanceService:
         record = AttendanceRecord(
             user_id=user_id,
             device_id=device_id,
-            timestamp=timestamp
+            timestamp=timestamp,
+            created_at=datetime.now(),
         )
 
         self.repository.save(record)
