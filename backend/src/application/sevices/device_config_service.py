@@ -40,12 +40,12 @@ class DeviceConfigService:
 
         return self.repository.update(device)
 
-    def activate_device(self, device_id: int, active: bool):
+    def activate_device(self, device_id: int, is_active: bool):
         device = self.repository.find_by_id(device_id)
         if not device:
             raise ValueError("Device not found")
 
-        device.is_active = active
+        device.is_active = is_active
         return self.repository.update(device)
 
 def deactivate_device(self, device_id: int):

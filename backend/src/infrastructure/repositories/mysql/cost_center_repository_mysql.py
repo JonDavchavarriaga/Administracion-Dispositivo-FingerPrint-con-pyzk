@@ -15,7 +15,7 @@ class CostCenterRepositoryMySQL(CostCenterRepository):
             db.commit()
             db.refresh(model)
 
-            cost_center.cost_center_id = model.id
+            cost_center.id = model.id
             return cost_center
         finally:
             db.close()
@@ -28,12 +28,12 @@ class CostCenterRepositoryMySQL(CostCenterRepository):
         finally:
             db.close()
 
-    def find_by_id(self, cost_center_id: int) -> CostCenter | None:
+    def find_by_id(self, id: int) -> CostCenter | None:
         db = SessionLocal()
         try:
             row = (
                 db.query(CostCenterTable)
-                .filter(CostCenterTable.id == cost_center_id)
+                .filter(CostCenterTable.id == id)
                 .first()
             )
             return self._to_domain(row) if row else None
@@ -45,7 +45,7 @@ class CostCenterRepositoryMySQL(CostCenterRepository):
         try:
             row = (
                 db.query(CostCenterTable)
-                .filter(CostCenterTable.id == cost_center.cost_center_id)
+                .filter(CostCenterTable.id == cost_center.id)
                 .first()
             )
 
@@ -58,12 +58,12 @@ class CostCenterRepositoryMySQL(CostCenterRepository):
         finally:
             db.close()
 
-    def delete(self, cost_center_id: int):
+    def delete(self, id: int):
         db = SessionLocal()
         try:
             row = (
                 db.query(CostCenterTable)
-                .filter(CostCenterTable.id == cost_center_id)
+                .filter(CostCenterTable.id == id)
                 .first()
             )
 

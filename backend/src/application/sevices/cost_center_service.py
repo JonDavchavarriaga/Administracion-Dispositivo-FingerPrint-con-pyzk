@@ -5,7 +5,7 @@ class CostCenterService:
     def __init__(self, repository):
         self.repository = repository
 
-    def register_cost_center(self, name: str) -> CostCenter:
+    def register_cost_center(self,name: str) -> CostCenter:
         cost_center = CostCenter(name=name)
         return self.repository.save(cost_center)
 
