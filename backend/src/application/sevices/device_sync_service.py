@@ -3,10 +3,11 @@ from src.infrastructure.devices.zk_device import ZKFingerprintDevice
 
 class DeviceSyncService:
 
-    def __init__(self, device_repo, attendance_service, user_service):
+    def __init__(self, device_repo, attendance_service, user_service,user_device_repo):
         self.device_repo = device_repo
         self.attendance_service = attendance_service
         self.user_service = user_service
+        self.user_device_repo = user_device_repo
 
     def sync_device(self, device_id: int):
         device = self.device_repo.find_by_id(device_id)
@@ -30,6 +31,12 @@ class DeviceSyncService:
                     external_id=str(u["user_id"]),
                     name=u["name"]
                 )
+
+                self.user_device_repo.link_user_to_device(
+                    user_id=user.user_id,
+                    device_id=device.device_id
+                )
+
                 user_map[str(u["user_id"])] = user
 
             # ===== Marcaciones =====

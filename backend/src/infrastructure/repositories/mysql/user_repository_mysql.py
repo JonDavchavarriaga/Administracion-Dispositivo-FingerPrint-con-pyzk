@@ -12,8 +12,8 @@ class UserRepositoryMySQL(UserRepository):
             model = UserTable(
                 external_id=user.external_id,
                 name=user.name,
-                active=user.is_active,
-                cost_center=user.cost_center
+                is_active=user.is_active,
+                cost_center=user.cost_center_id
             )
             db.add(model)
             db.commit()
