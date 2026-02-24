@@ -9,6 +9,7 @@ from src.infrastructure.repositories.mysql.device_config_repository_mysql import
 from src.infrastructure.repositories.mysql.attendance_repository_mysql import AttendanceRepositoryMySQL
 from src.infrastructure.repositories.mysql.user_repository_mysql import UserRepositoryMySQL
 from src.infrastructure.repositories.mysql.cost_center_repository_mysql import CostCenterRepositoryMySQL
+from src.infrastructure.repositories.mysql.user_device_repository_mysql import UserDeviceRepositoryMySQL
 
 from src.infrastructure.repositories.mysql.database import init_db
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +22,7 @@ def main():
     attendance_repo = AttendanceRepositoryMySQL()
     user_repo = UserRepositoryMySQL()
     cost_center_repo = CostCenterRepositoryMySQL()
-
+    user_device_repo = UserDeviceRepositoryMySQL()
     # ===== Services =====
     attendance_service = AttendanceService(attendance_repo)
     user_service = UserService(user_repo)
@@ -29,7 +30,8 @@ def main():
     sync_service = DeviceSyncService(
         device_repo=device_repo,
         attendance_service=attendance_service,
-        user_service=user_service
+        user_service=user_service,
+        user_device_repo=user_device_repo
     )
 
     # ===== Scheduler =====

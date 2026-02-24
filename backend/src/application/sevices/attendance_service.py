@@ -1,6 +1,7 @@
 from src.domain.models.attendance_record import AttendanceRecord
 from datetime import datetime
 
+
 class AttendanceService:
     def __init__(self, repository):
         self.repository = repository
@@ -21,3 +22,7 @@ class AttendanceService:
         )
 
         self.repository.save(record)
+
+    def get_last_timestamp(self, device_id: int):
+        return self.repository.find_last_timestamp(device_id)
+

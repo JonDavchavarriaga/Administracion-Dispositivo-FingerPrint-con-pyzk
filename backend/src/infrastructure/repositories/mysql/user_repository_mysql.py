@@ -62,6 +62,6 @@ class UserRepositoryMySQL(UserRepository):
             user_id=u.id,
             external_id=u.external_id,
             name=u.name,
-            is_active=u.active,
+            is_active=u.is_active,
             cost_center_id=u.cost_center_id
         )

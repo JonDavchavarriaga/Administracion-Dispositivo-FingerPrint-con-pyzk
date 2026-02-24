@@ -35,3 +35,16 @@ class AttendanceRepositoryMySQL(AttendanceRepository):
             )
         finally:
             db.close()
+
+    def find_last_timestamp(self, device_id: int):
+        db = SessionLocal()
+        try:
+            result = (
+                db.query(AttendanceTable.timestamp)
+                .filter(AttendanceTable.device_id == device_id)
+                .order_by(AttendanceTable.timestamp.desc())
+                .first()
+            )
+            return result[0] if result else None
+        finally:
+            db.close()

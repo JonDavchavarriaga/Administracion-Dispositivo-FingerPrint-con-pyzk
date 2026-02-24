@@ -6,17 +6,10 @@ class UserDeviceRepositoryMySQL:
     def link_user_to_device(self, user_id: int, device_id: int):
         db = SessionLocal()
         try:
-            exists = (
-                db.query(UserDeviceTable)
-                .filter_by(user_id=user_id, device_id=device_id)
-                .first()
+            db.execute(
+                UserDeviceTable.__table__.insert().prefix_with("IGNORE"),
+                {"user_id": user_id, "device_id": device_id}
             )
-
-            if not exists:
-                db.add(UserDeviceTable(
-                    user_id=user_id,
-                    device_id=device_id
-                ))
-                db.commit()
+            db.commit()
         finally:
             db.close()

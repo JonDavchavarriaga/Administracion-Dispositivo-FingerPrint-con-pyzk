@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# agrega la carpeta backend al path de Python
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from src.infrastructure.devices.zk_device import ZKFingerprintDevice
 from src.infrastructure.repositories.mysql.device_config_repository_mysql import DeviceConfigRepositoryMySQL
 

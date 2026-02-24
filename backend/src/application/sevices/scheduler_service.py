@@ -9,36 +9,71 @@ class SchedulerService:
         self.device_repo = device_repo
         self.sync_service = sync_service
         self._running = False
+        self._device_locks = {}
 
     def start(self):
         if self._running:
+            print("[SCHEDULER] Ya estaba en ejecución")
             return
 
+        print("[SCHEDULER] Iniciando scheduler...")
         self._running = True
         thread = threading.Thread(target=self._run, daemon=True)
         thread.start()
 
     def _run(self):
+        print("[SCHEDULER] Hilo activo")
+
         while self._running:
-            now = datetime.now()
+            try:
+                now = datetime.now()
+                devices = self.device_repo.find_active()
 
-            devices = self.device_repo.find_active()
+                for device in devices:
+                    try:
+                        # lock por dispositivo → evita sync simultáneos
+                        if device.device_id not in self._device_locks:
+                            self._device_locks[device.device_id] = threading.Lock()
 
-            for device in devices:
-                # Nunca sincronizado → sync inmediato
-                if device.last_sync_at is None:
-                    self.sync_service.sync_device(device.device_id)
-                    continue
+                        lock = self._device_locks[device.device_id]
 
-                next_sync = device.last_sync_at + timedelta(
-                    seconds=device.interval_seconds
-                )
+                        if lock.locked():
+                            continue
 
-                if now >= next_sync:
-                    self.sync_service.sync_device(device.device_id)
+                        if device.last_sync_at is None:
+                            print(f"[SCHEDULER] Sync inicial → {device.name}")
+                            threading.Thread(
+                                target=self._safe_sync,
+                                args=(device.device_id, lock),
+                                daemon=True
+                            ).start()
+                            continue
 
-            # Tick corto (scheduler liviano)
-            time.sleep(10)
+                        next_sync = device.last_sync_at + timedelta(
+                            seconds=device.interval_seconds
+                        )
+
+                        if now >= next_sync:
+                            print(f"[SCHEDULER] Sync programado → {device.name}")
+                            threading.Thread(
+                                target=self._safe_sync,
+                                args=(device.device_id, lock),
+                                daemon=True
+                            ).start()
+
+                time.sleep(10)
+
+            except Exception as e:
+                print(f"[SCHEDULER] ERROR GLOBAL: {e}")
+                time.sleep(5)
+
+    def _safe_sync(self, device_id, lock):
+        with lock:
+            try:
+                self.sync_service.sync_device(device_id)
+            except Exception as e:
+                print(f"[SCHEDULER] ERROR en device {device_id}: {e}")
 
     def stop(self):
+        print("[SCHEDULER] Deteniendo scheduler...")
         self._running = False
