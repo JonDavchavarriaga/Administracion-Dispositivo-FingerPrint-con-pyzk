@@ -37,9 +37,11 @@ class SchedulerService:
 
                         lock = self._device_locks[device.device_id]
 
+                        # si ya se está sincronizando → saltar
                         if lock.locked():
                             continue
 
+                        # nunca sincronizado
                         if device.last_sync_at is None:
                             print(f"[SCHEDULER] Sync inicial → {device.name}")
                             threading.Thread(
@@ -61,6 +63,9 @@ class SchedulerService:
                                 daemon=True
                             ).start()
 
+                    except Exception as e:
+                        print(f"[SCHEDULER] ERROR en device {device.device_id}: {e}")
+
                 time.sleep(10)
 
             except Exception as e:
@@ -70,9 +75,11 @@ class SchedulerService:
     def _safe_sync(self, device_id, lock):
         with lock:
             try:
+                print(f"[SYNC] Iniciando device {device_id}")
                 self.sync_service.sync_device(device_id)
+                print(f"[SYNC] Finalizado device {device_id}")
             except Exception as e:
-                print(f"[SCHEDULER] ERROR en device {device_id}: {e}")
+                print(f"[SYNC] ERROR en device {device_id}: {e}")
 
     def stop(self):
         print("[SCHEDULER] Deteniendo scheduler...")
