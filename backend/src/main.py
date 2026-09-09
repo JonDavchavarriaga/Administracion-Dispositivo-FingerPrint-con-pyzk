@@ -12,10 +12,7 @@ from src.infrastructure.repositories.mysql.cost_center_repository_mysql import C
 from src.infrastructure.repositories.mysql.user_device_repository_mysql import UserDeviceRepositoryMySQL
 from src.infrastructure.devices.device_factory import build_biometric_device
 
-from src.infrastructure.repositories.mysql.database import init_db
 from fastapi.middleware.cors import CORSMiddleware
-
-init_db()
 
 def main():
     # ===== Repositories =====
