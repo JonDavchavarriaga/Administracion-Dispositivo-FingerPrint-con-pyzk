@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from typing import List, Optional
@@ -7,6 +7,10 @@ from src.application.services.device_config_service import DeviceConfigService
 from src.application.services.device_sync_service import DeviceSyncService
 from src.application.services.user_service import UserService
 from src.application.services.cost_center_service import CostCenterService
+from src.infrastructure.queue.celery_app import synchronize_device
+from src.infrastructure.realtime.device_status_manager import (
+    device_status_manager,
+)
 
 class DeviceRegisterRequest(BaseModel):
     name: str
@@ -53,6 +57,34 @@ def create_app(
     attendance_service = AttendanceService(attendance_repo)
     user_service = UserService(user_repo)
     cost_center_service = CostCenterService(cost_center_repo)
+
+    @app.websocket("/ws/devices")
+    async def device_status_websocket(websocket: WebSocket):
+        await device_status_manager.connect(websocket)
+        try:
+            devices = device_repo.find_all()
+            await websocket.send_json(
+                {
+                    "type": "device_snapshot",
+                    "devices": [
+                        {
+                            "device_id": device.device_id,
+                            "name": device.name,
+                            "status": "unknown" if device.is_active else "disabled",
+                            "last_sync_at": (
+                                device.last_sync_at.isoformat()
+                                if device.last_sync_at
+                                else None
+                            ),
+                        }
+                        for device in devices
+                    ],
+                }
+            )
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            device_status_manager.disconnect(websocket)
 
     @app.get("/users", tags=["Users"])
     def list_users():
@@ -148,15 +180,17 @@ def create_app(
     #======== Sync ========
     @app.post("/devices/{device_id}/sync", tags=["Sync"])
     def manual_sync(device_id: int):
-        sync_service.sync_device(device_id)
-        return {"status": "sync executed"}
+        device = device_repo.find_by_id(device_id)
+        if not device or not device.is_active:
+            raise HTTPException(status_code=404, detail="Device not found or inactive")
+        task = synchronize_device.delay(device_id)
+        return {"status": "queued", "task_id": task.id, "device_id": device_id}
 
     @app.post("/devices/sync-all", tags=["Sync"])
     def sync_all():
         devices = device_repo.find_active()
-        for d in devices:
-            sync_service.sync_device(d.device_id)
-        return {"status": "sync all executed"}
+        task_ids = [synchronize_device.delay(d.device_id).id for d in devices]
+        return {"status": "queued", "task_ids": task_ids}
 
     #======== Attendance Records ========
 
@@ -166,5 +200,3 @@ def create_app(
 
 
     return app
-
-
