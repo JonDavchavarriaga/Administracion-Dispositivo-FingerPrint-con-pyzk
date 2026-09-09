@@ -34,8 +34,12 @@ services:
         required: false
     environment:
       DB_HOST: 127.0.0.1
+      DB_NAME: ${DB_NAME:-attendance}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
       REDIS_URL: redis://127.0.0.1:6379/0
     network_mode: host
+    command: sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
     depends_on:
       db:
         condition: service_healthy
@@ -51,6 +55,9 @@ services:
         required: false
     environment:
       DB_HOST: 127.0.0.1
+      DB_NAME: ${DB_NAME:-attendance}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
       REDIS_URL: redis://127.0.0.1:6379/0
     network_mode: host
     command: celery -A src.infrastructure.queue.celery_app:celery_app worker --loglevel=INFO
