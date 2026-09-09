@@ -190,9 +190,19 @@ export default function Devices() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Dispositivos</h1>
+    <div className="space-y-8">
+      <section className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#780000]">
+            Infrastructure observatory
+          </p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#003049]">
+            Red biométrica
+          </h2>
+          <p className="mt-2 max-w-xl text-sm text-slate-500">
+            Tres puntos de control, una sola lectura operativa en tiempo real.
+          </p>
+        </div>
 
         <div className="flex gap-2">
           <button
@@ -209,12 +219,35 @@ export default function Devices() {
             + Registrar dispositivo
           </button>
         </div>
-      </div>
+      </section>
 
       {message && (
         <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-blue-700">
           {message}
         </div>
+      )}
+
+      {!loading && devices.length > 0 && (
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {devices.map((device) => (
+            <div key={device.device_id ?? device.id} className="relative overflow-hidden rounded-2xl bg-[#003049] p-5 text-[#fdf0d5]">
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full border-[12px] border-white/10" />
+              <div className="relative">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#669bbc]">
+                  Punto 0{device.device_id ?? device.id}
+                </p>
+                <h3 className="mt-3 text-lg font-bold">{device.name}</h3>
+                <p className="mt-1 text-xs text-white/50">{device.ip}</p>
+                <div className="mt-6 flex items-center justify-between">
+                  <span className="text-sm text-white/70">Estado operativo</span>
+                  <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
+                    {device.status === "error" ? "Atención" : "En línea"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </section>
       )}
 
       {loading ? (
@@ -234,7 +267,7 @@ export default function Devices() {
             </thead>
             <tbody>
               {devices.map((d) => (
-                <tr key={d.id} className="border-t hover:bg-gray-50">
+                <tr key={d.device_id ?? d.id} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-2">{d.name}</td>
                   <td className="px-4 py-2">{d.ip}</td>
                   <td className="px-4 py-2">

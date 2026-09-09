@@ -1,5 +1,18 @@
 @import "tailwindcss/preflight";
 @import "tailwindcss";
 
+@theme {
+  --color-molten-lava: #780000;
+  --color-brick-red: #c1121f;
+  --color-papaya-whip: #fdf0d5;
+  --color-deep-space-blue: #003049;
+  --color-steel-blue: #669bbc;
+}
 
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #003049;
+  background: #f7f8f6;
+}
 

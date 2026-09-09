@@ -64,6 +64,15 @@ def main():
         cost_center_repo=cost_center_repo
     )
 
+    @app.get("/", include_in_schema=False)
+    def root():
+        return {
+            "name": "Biometric Attendance Platform",
+            "status": "online",
+            "demo_mode": demo_mode,
+            "docs": "/docs",
+        }
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
