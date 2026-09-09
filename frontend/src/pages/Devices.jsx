@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { getDevices, createDevice } from "../api/devices.api";
+import {
+  getDevices,
+  createDevice,
+  syncDevice,
+  syncAllDevices,
+} from "../api/devices.api";
 import { useDeviceStatus } from "../hooks/useDeviceStatus";
 
 /* =========================
@@ -95,6 +100,8 @@ export default function Devices() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [syncing, setSyncing] = useState(null);
+  const [message, setMessage] = useState("");
 
   useDeviceStatus((event) => {
     if (event.type === "device_snapshot") {
@@ -119,7 +126,17 @@ export default function Devices() {
   async function loadDevices() {
     try {
       const data = await getDevices();
-      setDevices(Array.isArray(data) ? data : []);
+      setDevices((current) => {
+        const statuses = new Map(
+          current.map((device) => [device.device_id ?? device.id, device.status]),
+        );
+        return Array.isArray(data)
+          ? data.map((device) => ({
+              ...device,
+              status: device.status || statuses.get(device.device_id ?? device.id),
+            }))
+          : [];
+      });
     } catch (e) {
       console.error(e);
       setDevices([]);
@@ -134,18 +151,71 @@ export default function Devices() {
     loadDevices();
   }
 
+  async function handleSync(deviceId) {
+    setSyncing(deviceId);
+    setMessage("");
+    try {
+      const result = await syncDevice(deviceId);
+      setMessage(
+        result.status === "completed"
+          ? "Sincronización completada"
+          : "Sincronización enviada a la cola",
+      );
+      await loadDevices();
+    } catch (error) {
+      console.error(error);
+      setMessage("No se pudo iniciar la sincronización");
+    } finally {
+      setSyncing(null);
+    }
+  }
+
+  async function handleSyncAll() {
+    setSyncing("all");
+    setMessage("");
+    try {
+      const result = await syncAllDevices();
+      setMessage(
+        result.status === "completed"
+          ? "Sincronización demo completada"
+          : "Sincronizaciones enviadas a la cola",
+      );
+      await loadDevices();
+    } catch (error) {
+      console.error(error);
+      setMessage("No se pudo iniciar la sincronización");
+    } finally {
+      setSyncing(null);
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Dispositivos</h1>
 
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          + Registrar dispositivo
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSyncAll}
+            disabled={syncing !== null}
+            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+          >
+            {syncing === "all" ? "Sincronizando…" : "Sincronizar todo"}
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            + Registrar dispositivo
+          </button>
+        </div>
       </div>
+
+      {message && (
+        <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-blue-700">
+          {message}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-gray-500">Cargando dispositivos…</div>
@@ -159,6 +229,7 @@ export default function Devices() {
                 <th className="px-4 py-3 text-left">Nombre</th>
                 <th className="px-4 py-3 text-left">IP</th>
                 <th className="px-4 py-3 text-left">Estado</th>
+                <th className="px-4 py-3 text-left">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -167,10 +238,43 @@ export default function Devices() {
                   <td className="px-4 py-2">{d.name}</td>
                   <td className="px-4 py-2">{d.ip}</td>
                   <td className="px-4 py-2">
-                    <span className="inline-flex items-center gap-2 text-green-600">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      {d.status || (d.is_active ? "Activo" : "Inactivo")}
+                    <span className={`inline-flex items-center gap-2 ${
+                      d.status === "error"
+                        ? "text-red-600"
+                        : d.status === "connected" || d.status === "healthy"
+                          ? "text-green-600"
+                          : "text-slate-500"
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${
+                        d.status === "error"
+                          ? "bg-red-500"
+                          : d.status === "connected" || d.status === "healthy"
+                            ? "bg-green-500"
+                            : "bg-slate-400"
+                      }`}></span>
+                      {d.status === "healthy"
+                        ? "Saludable"
+                        : d.status === "connected"
+                          ? "Conectado"
+                          : d.status === "connecting"
+                            ? "Conectando…"
+                            : d.status === "error"
+                              ? "Error"
+                              : d.status === "disabled"
+                                ? "Inactivo"
+                                : "Sin estado"}
                     </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <button
+                      onClick={() => handleSync(d.device_id ?? d.id)}
+                      disabled={syncing !== null}
+                      className="text-blue-600 hover:underline disabled:opacity-50"
+                    >
+                      {syncing === (d.device_id ?? d.id)
+                        ? "Procesando…"
+                        : "Sincronizar"}
+                    </button>
                   </td>
                 </tr>
               ))}
