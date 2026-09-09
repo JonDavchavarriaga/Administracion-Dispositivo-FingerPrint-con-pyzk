@@ -34,8 +34,9 @@ def main():
     )
 
     # ===== Scheduler =====
-    scheduler = SchedulerService(device_repo, sync_service)
-    scheduler.start()
+    if os.getenv("ENABLE_LEGACY_SCHEDULER", "False").lower() == "true":
+        scheduler = SchedulerService(device_repo, sync_service)
+        scheduler.start()
 
     # ===== API =====
     app = create_app(
@@ -48,13 +49,25 @@ def main():
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origins=[
+            origin.strip()
+            for origin in os.getenv(
+                "CORS_ORIGINS",
+                "http://localhost:5173",
+            ).split(",")
+            if origin.strip()
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
+    @app.get("/health", tags=["System"])
+    def health():
+        return {"status": "ok", "demo_mode": os.getenv("MOCK_MODE", "False").lower() == "true"}
+
     return app
 
 
 app = main()
+import os

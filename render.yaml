@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: biometric-attendance-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: MOCK_MODE
+        value: "True"
+      - key: ENABLE_LEGACY_SCHEDULER
+        value: "False"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  - type: worker
+    name: biometric-attendance-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A src.infrastructure.queue.celery_app:celery_app worker --loglevel=INFO
+    envVars:
+      - key: MOCK_MODE
+        value: "True"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  - type: worker
+    name: biometric-attendance-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A src.infrastructure.queue.celery_app:celery_app beat --loglevel=INFO
+    envVars:
+      - key: MOCK_MODE
+        value: "True"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

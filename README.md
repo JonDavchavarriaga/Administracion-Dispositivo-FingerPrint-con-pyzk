@@ -1,85 +1,154 @@
+# Biometric Attendance Platform
 
-# 🖐️ Proyecto Huellero – Plataforma de Asistencia Biométrica
+Enterprise-oriented biometric attendance platform built with Python, FastAPI, SQLAlchemy, MySQL, Celery, Redis, React and Vite. The project supports physical ZKTeco devices and a deterministic demo mode for portfolio demonstrations.
 
-Sistema de gestión de asistencia basado en **dispositivos biométricos**, con arquitectura desacoplada **frontend + backend**, su backend con arquitectura hexagonal,preparado para ejecución local o despliegue mediante **Docker**.
+## Architecture
 
----
+The backend follows a hexagonal architecture:
 
-## 🎯 Objetivo del Proyecto
+```text
+Domain
+  Entities, value objects and device roles
+        |
+Application
+  Use cases and ports
+  BiometricDeviceRepository
+        |
+Infrastructure
+  ZKTeco/pyzk adapter
+  Mock/Rush Hour adapter
+  MySQL repositories
+  Celery + Redis workers
+        |
+Delivery
+  FastAPI REST and WebSocket endpoints
+```
 
-Permitir el registro y sincronización de asistencia desde dispositivos biométricos físicos, exponiendo la información a través de una API y una interfaz web.
+`pyzk` is isolated in `backend/src/infrastructure/devices/zk_device.py`. Application services only depend on the `BiometricDeviceRepository` port, so the mock and ZKTeco adapters use the same synchronization flow.
 
+Each device returns a complete snapshot of users and attendance records. Synchronization processes snapshots in batches and uses the approved idempotency key:
 
+```text
+UNIQUE(device_id, user_external_id, timestamp)
+```
 
-## 🧱 Esquema de Archivos
-ProyectoHuellero/
+The database schema is managed by Alembic. `cost_centers` is a dedicated normalized table, and `users.cost_center_id` is a foreign key.
 
-├── backend/ 
+## Repository structure
 
-├── frontend/ # React + Vite
+```text
+backend/
+  alembic/                       Database migrations
+  src/application/ports/         Application contracts
+  src/application/services/      Use cases
+  src/domain/models/             Domain entities
+  src/infrastructure/api/        REST and WebSocket delivery
+  src/infrastructure/devices/    ZKTeco and mock adapters
+  src/infrastructure/queue/      Celery application and tasks
+  src/infrastructure/realtime/   In-memory WebSocket manager
+frontend/
+  src/api/                       REST clients
+  src/hooks/                     React integration hooks
+  src/pages/                     User-facing screens
+docker-compose.yml               Local MySQL, Redis, API, workers and frontend
+render.yaml                      Render web/worker/beat services
+netlify.toml                     Netlify build and SPA fallback
+```
 
-├── docker-compose.yml
+## Demo / MOCK_MODE
 
-├── .env
+Set `MOCK_MODE=True` to run without physical biometric devices. The mock adapter:
 
-└── README.md
+- Generates complete snapshots like the real hardware.
+- Adds demo employees during subsequent cycles.
+- Produces repeatable Rush Hour attendance bursts.
+- Supports `ENTRY`, `EXIT` and `CAFETERIA` device roles.
+- Uses the same Celery, persistence, deduplication and WebSocket paths as real devices.
 
+The repository `.env.example` is configured for the portfolio demo. Copy it to `.env` before running locally:
 
----
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
 
-## 🛠️ Tecnologías
+For real devices, set `MOCK_MODE=False` and register devices with reachable LAN addresses. The backend must run in a network environment that can route to the company LAN; Docker `network_mode: host` is intentionally preserved in the local Compose setup.
+
+## Environment variables
 
 ### Backend
-- Python 3.11
-- FastAPI
-- SQLAlchemy
-- MySQL (externo)
-- pyzk (libreria para dispositivos biométricos)
+
+| Variable | Example | Purpose |
+|---|---|---|
+| `DB_HOST` | `127.0.0.1` | MySQL host when `DATABASE_URL` is not set |
+| `DB_PORT` | `3306` | MySQL port |
+| `DB_NAME` | `attendance` | Database name |
+| `DB_USER` | `root` | Database user |
+| `DB_PASSWORD` | `secret` | Database password |
+| `DATABASE_URL` | `mysql+pymysql://...` | Full SQLAlchemy URL; recommended on Render |
+| `REDIS_URL` | `redis://localhost:6379/0` | Celery broker/result backend |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated frontend origins |
+| `MOCK_MODE` | `True` | Enable the demo adapter |
+| `MOCK_SEED` | `42` | Reproducible demo data |
+| `MOCK_BURST_SIZE` | `5` | Records generated per mock cycle |
+| `ENABLE_LEGACY_SCHEDULER` | `False` | Only enable for legacy single-process scheduling; Celery Beat is preferred |
 
 ### Frontend
-- React
-- Vite
-- Axios
-- TailwindCSS
 
-### Infraestructura
-- Docker
-- Docker Compose
+| Variable | Example | Purpose |
+|---|---|---|
+| `VITE_API_URL` | `http://localhost:8000` | Public backend URL used by Axios and WebSockets |
 
----
+For Netlify, set `VITE_API_URL` to the Render API URL, for example `https://your-api.onrender.com`.
 
-## 🔄 Independencia de Servicios
+## Local services
 
-**El frontend y el backend pueden ejecutarse de forma independiente o conjunta.**
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
 
-- El frontend consume la API vía `VITE_API_URL`
-- El backend se conecta a MySQL usando variables de entorno
-- MySQL **NO está dockerizado** 
+Services:
 
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:8000`
+- API health: `http://localhost:8000/health`
+- Swagger: `http://localhost:8000/docs`
+- Device WebSocket: `ws://localhost:8000/ws/devices`
+- MySQL: `localhost:3306`
+- Redis: `localhost:6379`
 
----
+The API container applies `alembic upgrade head` before starting. Celery Worker processes synchronization jobs and Celery Beat schedules full snapshots every five minutes.
 
-## ⚙️ Variables de Entorno
+## Deploying the portfolio demo
 
-Crear un archivo `.env` en la raíz del proyecto, en el repositorio se explica por medio de `.env.example`.
+### Render
 
----
+The included `render.yaml` defines separate API, Celery Worker and Celery Beat services. Configure these secret values in Render:
 
-## Instalación y Ejecución
+- `DATABASE_URL`: a reachable managed MySQL URL.
+- `REDIS_URL`: a reachable Redis URL.
+- `CORS_ORIGINS`: the Netlify site URL.
+- `MOCK_MODE=True` for the public demo.
 
-### Requisitos
+Render cannot reach biometric devices on a private company LAN. The Render deployment is therefore a demo deployment using `MOCK_MODE=True`. A real-device deployment must run inside the company network or through an approved VPN/private networking solution.
 
-- Docker y Docker compose
+### Netlify
 
-- MySQl
+The included `netlify.toml` builds `frontend/` and enables SPA fallback routing. Configure:
 
-### Levantar el sistema completo
+```text
+VITE_API_URL=https://your-api.onrender.com
+```
 
-- `docker comose up --build`
+The browser must be able to reach the Render API over HTTPS and its WebSocket endpoint over WSS.
 
-### Instalación desacoplada 
+## Release readiness
 
-Si por alguna razón solo se desea levantar el backend o el frontend
-se ingresa a cada carpeta la cual posé también un readme.md con las instrucciones de instalación
+The current `main` branch contains the three implemented phases:
 
+- `phase-1-baseline`: hexagonal device ports and demo adapter.
+- `phase-2-persistence`: Alembic, idempotent batch persistence, Celery, Redis and MySQL Compose.
+- `phase-3-final`: WebSockets, React reconnection, deployment configuration and documentation.
 
+Before making the public demo live, configure managed MySQL/Redis and the two public URLs in Render and Netlify. Do not commit `.env` or production credentials. After those provider variables are configured, releasing from `main` is the correct path; the branch is already synchronized with GitHub.
