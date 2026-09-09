@@ -1,15 +1,16 @@
 from src.infrastructure.api.attendance_api import create_app
-from src.application.sevices.scheduler_service import SchedulerService
-from src.application.sevices.device_sync_service import DeviceSyncService
-from src.application.sevices.attendance_service import AttendanceService
-from src.application.sevices.user_service import UserService
-from src.application.sevices.cost_center_service import CostCenterService
+from src.application.services.scheduler_service import SchedulerService
+from src.application.services.device_sync_service import DeviceSyncService
+from src.application.services.attendance_service import AttendanceService
+from src.application.services.user_service import UserService
+from src.application.services.cost_center_service import CostCenterService
 
 from src.infrastructure.repositories.mysql.device_config_repository_mysql import DeviceConfigRepositoryMySQL
 from src.infrastructure.repositories.mysql.attendance_repository_mysql import AttendanceRepositoryMySQL
 from src.infrastructure.repositories.mysql.user_repository_mysql import UserRepositoryMySQL
 from src.infrastructure.repositories.mysql.cost_center_repository_mysql import CostCenterRepositoryMySQL
 from src.infrastructure.repositories.mysql.user_device_repository_mysql import UserDeviceRepositoryMySQL
+from src.infrastructure.devices.device_factory import build_biometric_device
 
 from src.infrastructure.repositories.mysql.database import init_db
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +32,8 @@ def main():
         device_repo=device_repo,
         attendance_service=attendance_service,
         user_service=user_service,
-        user_device_repo=user_device_repo
+        user_device_repo=user_device_repo,
+        device_factory=build_biometric_device,
     )
 
     # ===== Scheduler =====

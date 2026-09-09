@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.domain.models.costCenter import CostCenter
+from src.domain.models.cost_center import CostCenter
 
 class CostCenterRepository(ABC):
 
@@ -22,4 +22,3 @@ class CostCenterRepository(ABC):
     @abstractmethod
     def delete(self, cost_center_id: int):
         pass
-

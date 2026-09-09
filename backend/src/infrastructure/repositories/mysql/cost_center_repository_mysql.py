@@ -1,7 +1,7 @@
 from src.application.ports.cost_center_repository import CostCenterRepository
 from src.infrastructure.repositories.mysql.database import SessionLocal
 from src.infrastructure.repositories.mysql.models import CostCenterTable
-from src.domain.models.costCenter import CostCenter
+from src.domain.models.cost_center import CostCenter
 
 class CostCenterRepositoryMySQL(CostCenterRepository):
 

@@ -13,7 +13,7 @@ class UserRepositoryMySQL(UserRepository):
                 external_id=user.external_id,
                 name=user.name,
                 is_active=user.is_active,
-                cost_center=user.cost_center_id
+                cost_center_id=user.cost_center_id
             )
             db.add(model)
             db.commit()

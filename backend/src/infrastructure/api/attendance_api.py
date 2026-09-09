@@ -2,11 +2,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from typing import List, Optional
-from src.application.sevices.attendance_service import AttendanceService
-from src.application.sevices.device_config_service import DeviceConfigService
-from src.application.sevices.device_sync_service import DeviceSyncService
-from src.application.sevices.user_service import UserService
-from src.application.sevices.cost_center_service import CostCenterService
+from src.application.services.attendance_service import AttendanceService
+from src.application.services.device_config_service import DeviceConfigService
+from src.application.services.device_sync_service import DeviceSyncService
+from src.application.services.user_service import UserService
+from src.application.services.cost_center_service import CostCenterService
 
 class DeviceRegisterRequest(BaseModel):
     name: str
@@ -40,11 +40,11 @@ def create_app(
 ):
     app = FastAPI(title="Sistema de Asistencia")
     openapi_tags=[
-        {"name": "Users", "description": "Gestión de usuarios"},
-        {"name": "Cost Centers", "description": "Centros de costo"},
-        {"name": "Devices", "description": "Dispositivos biométricos"},
-        {"name": "Sync", "description": "Sincronización de dispositivos"},
-        {"name": "Attendance", "description": "Marcaciones y asistencias"},
+        {"name": "Users", "description": "User management"},
+        {"name": "Cost Centers", "description": "Cost center management"},
+        {"name": "Devices", "description": "Biometric device management"},
+        {"name": "Sync", "description": "Device synchronization"},
+        {"name": "Attendance", "description": "Attendance records"},
     ]
     device_service = DeviceConfigService(
         repository=device_repo,
@@ -166,7 +166,5 @@ def create_app(
 
 
     return app
-
-
 
 

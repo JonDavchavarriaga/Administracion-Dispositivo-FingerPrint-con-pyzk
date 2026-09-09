@@ -1,10 +1,10 @@
 import sys
 from pathlib import Path
 
-# agrega la carpeta backend al path de Python
+# Add the backend directory to the Python path.
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from src.infrastructure.devices.zk_device import ZKFingerprintDevice
+from src.infrastructure.devices.zk_device import ZKTecoBiometricDeviceRepository
 from src.infrastructure.repositories.mysql.device_config_repository_mysql import DeviceConfigRepositoryMySQL
 
 
@@ -15,54 +15,54 @@ def debug_devices():
     devices = repo.find_active()
 
     print("\n==============================")
-    print(" DIAGNÓSTICO DE HUELEROS ")
+    print(" BIOMETRIC DEVICE DIAGNOSTICS ")
     print("==============================\n")
 
     if not devices:
-        print("No hay dispositivos activos en base de datos")
+        print("No active devices found in the database")
         return
 
     for device in devices:
         print(f"Device ID: {device.device_id}")
-        print(f"Nombre: {device.name}")
-        print(f"Conexión: {device.ip}:{device.port}")
-        print(f"Intervalo: {device.interval_seconds}s")
-        print("Conectando...")
+        print(f"Name: {device.name}")
+        print(f"Connection: {device.ip}:{device.port}")
+        print(f"Interval: {device.interval_seconds}s")
+        print("Connecting...")
 
-        zk = ZKFingerprintDevice(
+        zk = ZKTecoBiometricDeviceRepository(
             ip=device.ip,
             port=device.port
         )
 
         try:
             zk.connect()
-            print("✔ Conectado")
+            print("Connected")
 
-            users = zk.get_users()
-            print(f"Usuarios encontrados: {len(users)}")
+            users = tuple(zk.fetch_users())
+            print(f"Users found: {len(users)}")
 
-            records = zk.get_attendance()
-            print(f"Marcaciones encontradas: {len(records)}")
+            records = tuple(zk.fetch_attendance())
+            print(f"Attendance records found: {len(records)}")
 
             if records:
-                print(f"Primera marcación: {records[0]['timestamp']}")
-                print(f"Última marcación: {records[-1]['timestamp']}")
+                print(f"Primera marcación: {records[0].timestamp}")
+                print(f"Última marcación: {records[-1].timestamp}")
             else:
-                print("⚠ El dispositivo no tiene marcaciones")
+                print("The device has no attendance records")
 
         except Exception as e:
-            print(f"✖ ERROR: {e}")
+            print(f"ERROR: {e}")
 
         finally:
             try:
                 zk.disconnect()
-                print("Desconectado")
+                print("Disconnected")
             except:
                 pass
 
         print("\n--------------------------------\n")
 
-    print("FIN DEL DIAGNÓSTICO\n")
+    print("END OF DIAGNOSTICS\n")
 
 
 if __name__ == "__main__":

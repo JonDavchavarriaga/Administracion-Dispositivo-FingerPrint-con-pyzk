@@ -1,4 +1,4 @@
-from src.domain.models.costCenter import CostCenter
+from src.domain.models.cost_center import CostCenter
 
 
 class CostCenterService:
