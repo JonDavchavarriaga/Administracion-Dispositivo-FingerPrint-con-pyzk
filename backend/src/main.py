@@ -1,3 +1,5 @@
+import os
+
 from src.infrastructure.api.attendance_api import create_app
 from src.application.services.scheduler_service import SchedulerService
 from src.application.services.device_sync_service import DeviceSyncService
@@ -11,16 +13,31 @@ from src.infrastructure.repositories.mysql.user_repository_mysql import UserRepo
 from src.infrastructure.repositories.mysql.cost_center_repository_mysql import CostCenterRepositoryMySQL
 from src.infrastructure.repositories.mysql.user_device_repository_mysql import UserDeviceRepositoryMySQL
 from src.infrastructure.devices.device_factory import build_biometric_device
+from src.infrastructure.repositories.demo_repositories import (
+    DemoAttendanceRepository,
+    DemoCostCenterRepository,
+    DemoDeviceRepository,
+    DemoUserDeviceRepository,
+    DemoUserRepository,
+)
 
 from fastapi.middleware.cors import CORSMiddleware
 
 def main():
+    demo_mode = os.getenv("MOCK_MODE", "False").lower() == "true"
     # ===== Repositories =====
-    device_repo = DeviceConfigRepositoryMySQL()
-    attendance_repo = AttendanceRepositoryMySQL()
-    user_repo = UserRepositoryMySQL()
-    cost_center_repo = CostCenterRepositoryMySQL()
-    user_device_repo = UserDeviceRepositoryMySQL()
+    if demo_mode:
+        device_repo = DemoDeviceRepository()
+        attendance_repo = DemoAttendanceRepository()
+        user_repo = DemoUserRepository()
+        cost_center_repo = DemoCostCenterRepository()
+        user_device_repo = DemoUserDeviceRepository()
+    else:
+        device_repo = DeviceConfigRepositoryMySQL()
+        attendance_repo = AttendanceRepositoryMySQL()
+        user_repo = UserRepositoryMySQL()
+        cost_center_repo = CostCenterRepositoryMySQL()
+        user_device_repo = UserDeviceRepositoryMySQL()
     # ===== Services =====
     attendance_service = AttendanceService(attendance_repo)
     user_service = UserService(user_repo)

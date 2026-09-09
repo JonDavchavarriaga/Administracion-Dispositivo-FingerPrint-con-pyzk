@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
@@ -183,12 +185,18 @@ def create_app(
         device = device_repo.find_by_id(device_id)
         if not device or not device.is_active:
             raise HTTPException(status_code=404, detail="Device not found or inactive")
+        if os.getenv("MOCK_MODE", "False").lower() == "true":
+            result = sync_service.sync_device(device_id)
+            return {"status": "completed", "device_id": device_id, "result": result}
         task = synchronize_device.delay(device_id)
         return {"status": "queued", "task_id": task.id, "device_id": device_id}
 
     @app.post("/devices/sync-all", tags=["Sync"])
     def sync_all():
         devices = device_repo.find_active()
+        if os.getenv("MOCK_MODE", "False").lower() == "true":
+            results = [sync_service.sync_device(d.device_id) for d in devices]
+            return {"status": "completed", "results": results}
         task_ids = [synchronize_device.delay(d.device_id).id for d in devices]
         return {"status": "queued", "task_ids": task_ids}
 

@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 8000
 
 # Comando CORRECTO para levantar FastAPI
-CMD ["sh", "-c", "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "if [ \"$MOCK_MODE\" = \"True\" ] || [ \"$MOCK_MODE\" = \"true\" ]; then uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}; else alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]

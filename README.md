@@ -124,14 +124,12 @@ The API container applies `alembic upgrade head` before starting. Celery Worker 
 
 ### Render
 
-The included `render.yaml` defines separate API, Celery Worker and Celery Beat services. Configure these secret values in Render:
+The included `render.yaml` defines a web service for the no-dependency demo. Configure:
 
-- `DATABASE_URL`: a reachable managed MySQL URL.
-- `REDIS_URL`: a reachable Redis URL.
 - `CORS_ORIGINS`: the Netlify site URL.
 - `MOCK_MODE=True` for the public demo.
 
-Render cannot reach biometric devices on a private company LAN. The Render deployment is therefore a demo deployment using `MOCK_MODE=True`. A real-device deployment must run inside the company network or through an approved VPN/private networking solution.
+`DATABASE_URL` and `REDIS_URL` are intentionally omitted for this demo. The backend uses temporary in-memory repositories and direct mock synchronization when `MOCK_MODE=True`. Data resets on redeploy/restart. Render cannot reach biometric devices on a private company LAN. A real-device deployment must run inside the company network or through an approved VPN/private networking solution.
 
 ### Netlify
 
@@ -151,4 +149,4 @@ The current `main` branch contains the three implemented phases:
 - `phase-2-persistence`: Alembic, idempotent batch persistence, Celery, Redis and MySQL Compose.
 - `phase-3-final`: WebSockets, React reconnection, deployment configuration and documentation.
 
-Before making the public demo live, configure managed MySQL/Redis and the two public URLs in Render and Netlify. Do not commit `.env` or production credentials. After those provider variables are configured, releasing from `main` is the correct path; the branch is already synchronized with GitHub.
+Before making the public demo live, configure only `MOCK_MODE=True`, `CORS_ORIGINS` in Render and `VITE_API_URL` in Netlify. Do not commit `.env` or production credentials. For a persistent production release later, add managed MySQL/Redis and enable the Celery Worker/Beat services. Releasing this demo from `main` is the correct path.

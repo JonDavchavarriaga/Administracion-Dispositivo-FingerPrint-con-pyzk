@@ -1,35 +1,46 @@
-Interfaz web del sistema de asistencia biométrica.
+# Biometric Attendance Platform — Frontend
 
-Construida con **React + Vite**, consume la API del backend para:
-- Registro de dispositivos
-- Visualización de marcaciones
-- Pruebas funcionales del sistema
+React + Vite administration dashboard for the biometric attendance platform.
 
----
+## Configuration
 
-## 🛠️ Tecnologías
+Create `frontend/.env` for local development:
 
-- React
-- Vite
-- Axios
-- TailwindCSS
-
----
-
-## ⚙️ Configuración
-
-El frontend utiliza una variable de entorno para conectarse al backend.
-
-### `.env`
 ```env
 VITE_API_URL=http://localhost:8000
 ```
 
-## ▶️ Ejecución Local
+For Netlify, set the same variable to the deployed Render API:
 
-- npm install
-- npm run dev
+```env
+VITE_API_URL=https://your-api.onrender.com
+```
 
-Disponible en:
+The frontend uses the REST API for devices and attendance, and connects to:
 
-http://localhost:5173
+```text
+wss://your-api.onrender.com/ws/devices
+```
+
+The device dashboard reconnects automatically and updates device status events without a page reload.
+
+## Local development
+
+```powershell
+npm install
+npm run dev
+```
+
+Available at `http://localhost:5173`.
+
+## Production build
+
+```powershell
+npm ci
+npm run lint
+npm run build
+```
+
+Netlify is configured through the repository-level `netlify.toml`. It builds the `frontend` directory and enables SPA fallback routing.
+
+User-facing labels remain in Spanish for the portfolio audience. Component names, hooks, variables and API code are maintained in English.
