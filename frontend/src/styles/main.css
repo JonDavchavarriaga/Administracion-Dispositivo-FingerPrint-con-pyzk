@@ -15,3 +15,18 @@ body {
   color: #003049;
   background: #f8fafc;
 }
+
+@keyframes stack-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-stack-in {
+  animation: stack-in 420ms ease-out both;
+}
