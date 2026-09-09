@@ -66,7 +66,7 @@ function Narrative() {
   const [open, setOpen] = useState(false);
 
   return (
-    <aside className="relative min-w-0 overflow-hidden rounded-2xl bg-[#003049] p-6 text-white shadow-lg">
+    <aside className="relative min-w-0 self-start overflow-hidden rounded-2xl bg-[#003049] p-6 text-white shadow-lg lg:max-w-md">
       <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className="group flex w-full items-center gap-4 rounded-xl border border-white/15 bg-white/5 p-3 text-left transition hover:bg-white/10">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#c1121f] text-2xl font-bold shadow-md transition group-hover:scale-105">?</span>
         <span>
@@ -144,7 +144,7 @@ export default function MasterDashboard() {
 
         <main className="mx-auto max-w-7xl space-y-10 p-4 sm:p-6 lg:p-10">
           <div className="flex justify-center">
-            <button type="button" onClick={() => handleSync()} disabled={syncing !== null} className="inline-flex items-center gap-2 rounded-xl bg-[#003049] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#669bbc] hover:shadow-lg active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">{syncing === "all" ? "Sincronizando..." : "↻  Sincronizar toda la red"}</button>
+            <button type="button" onClick={() => handleSync()} disabled={syncing !== null} className="sync-button inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-lg active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50">{syncing === "all" ? "Sincronizando..." : "↻  Sincronizar toda la red"}</button>
           </div>
 
           <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -173,7 +173,7 @@ export default function MasterDashboard() {
                   const state = statusInfo(device.status);
                   return <article key={id} className="flex min-h-64 flex-col justify-between rounded-2xl border border-gray-200 bg-white p-6 shadow-md transition hover:-translate-y-1 hover:border-[#669bbc] hover:shadow-xl">
                     <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#669bbc]">Punto 0{id}</p><h3 className="mt-2 truncate text-lg font-bold text-[#003049]">{device.name}</h3><p className="mt-1 truncate text-xs text-slate-500">{device.ip}</p></div><span className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${state.className}`}><span className={`h-2 w-2 rounded-full ${state.dot}`} />{state.label}</span></div>
-                    <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-5"><span className="text-xs text-slate-500">Cada {device.interval_seconds}s</span><button type="button" onClick={() => handleSync(id)} disabled={syncing !== null} className="inline-flex items-center gap-1 rounded-lg border border-[#003049] bg-[#003049] px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#669bbc] hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50">{syncing === id ? "Procesando..." : "↻ Sincronizar"}</button></div>
+                    <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-5"><span className="text-xs text-slate-500">Cada {device.interval_seconds}s</span><button type="button" onClick={() => handleSync(id)} disabled={syncing !== null} className="sync-button inline-flex items-center gap-1 rounded-lg border border-green-700 bg-green-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50">{syncing === id ? "Procesando..." : "↻ Sincronizar"}</button></div>
                   </article>;
                 })}
               </div>

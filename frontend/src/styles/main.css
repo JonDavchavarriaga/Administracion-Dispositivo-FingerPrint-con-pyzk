@@ -30,3 +30,21 @@ body {
 .animate-stack-in {
   animation: stack-in 420ms ease-out both;
 }
+
+@keyframes sync-ready {
+  0%,
+  100% {
+    box-shadow: 0 4px 10px rgb(22 163 74 / 0.18);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgb(22 163 74 / 0.35);
+  }
+}
+
+.sync-button:not(:disabled) {
+  animation: sync-ready 2.4s ease-in-out infinite;
+}
+
+.sync-button:not(:disabled):hover {
+  animation-play-state: paused;
+}
