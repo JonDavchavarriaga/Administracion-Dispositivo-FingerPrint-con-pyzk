@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey
+    ,UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -52,6 +53,29 @@ class AttendanceTable(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    user_external_id = Column(String(50), nullable=False)
     device_id = Column(Integer, ForeignKey("devices.id", ondelete="RESTRICT"), nullable=False)
     timestamp = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (
+        UniqueConstraint(
+            "device_id",
+            "user_external_id",
+            "timestamp",
+            name="uq_attendance_device_external_timestamp",
+        ),
+    )
+
+
+class SyncJobTable(Base):
+    __tablename__ = "sync_jobs"
+
+    id = Column(String(36), primary_key=True)
+    device_id = Column(Integer, ForeignKey("devices.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(20), nullable=False)
+    attempt = Column(Integer, nullable=False, default=0)
+    scheduled_at = Column(DateTime, nullable=False)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    error_code = Column(String(80), nullable=True)
+    error_message = Column(String(500), nullable=True)

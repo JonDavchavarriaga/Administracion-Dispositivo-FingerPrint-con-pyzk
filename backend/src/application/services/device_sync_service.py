@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import datetime
 
 from src.application.ports.biometric_device_repository import (
     BiometricDeviceRepository,
@@ -29,8 +30,14 @@ class DeviceSyncService:
             raise RuntimeError("No biometric device factory has been configured")
 
         biometric_device: BiometricDeviceRepository = self.device_factory(device)
+        from src.infrastructure.realtime.device_status_manager import (
+            publish_device_status,
+        )
+
         try:
+            publish_device_status(device_id, "connecting")
             biometric_device.connect()
+            publish_device_status(device_id, "connected")
             users = tuple(biometric_device.fetch_users())
             user_map = {}
 
@@ -48,22 +55,36 @@ class DeviceSyncService:
             # The hardware returns a complete snapshot; persistence becomes
             # idempotent through the repository unique constraint.
             records = tuple(biometric_device.fetch_attendance())
+            attendance_records = []
+            from src.domain.models.attendance_record import AttendanceRecord
+
             for record in records:
                 user = user_map.get(record.user_external_id)
                 if user is None:
                     continue
-                self.attendance_service.process_record(
-                    user_id=user.user_id,
-                    device_id=device.device_id,
-                    timestamp=record.timestamp,
+                attendance_records.append(
+                    AttendanceRecord(
+                        user_id=user.user_id,
+                        user_external_id=record.user_external_id,
+                        device_id=device.device_id,
+                        timestamp=record.timestamp,
+                        created_at=datetime.utcnow(),
+                    )
                 )
 
+            processed_records = self.attendance_service.process_records(
+                attendance_records
+            )
             self.device_repo.update_last_sync(device.device_id)
+            publish_device_status(device_id, "healthy")
             return {
                 "device_id": device.device_id,
                 "users": len(users),
-                "attendance_records": len(records),
+                "attendance_records": processed_records,
             }
+        except Exception as error:
+            publish_device_status(device_id, "error", error=str(error))
+            raise
         finally:
             biometric_device.disconnect()
 

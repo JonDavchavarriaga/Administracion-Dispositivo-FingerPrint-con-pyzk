@@ -2,6 +2,7 @@ from src.application.ports.attendance_repository import AttendanceRepository
 from src.infrastructure.repositories.mysql.database import SessionLocal
 from src.infrastructure.repositories.mysql.models import AttendanceTable
 from src.domain.models.attendance_record import AttendanceRecord
+from sqlalchemy.dialects.mysql import insert
 
 
 class AttendanceRepositoryMySQL(AttendanceRepository):
@@ -11,12 +12,46 @@ class AttendanceRepositoryMySQL(AttendanceRepository):
         try:
             model = AttendanceTable(
                 user_id=record.user_id,
+                user_external_id=record.user_external_id,
                 device_id=record.device_id,
                 timestamp=record.timestamp,
                 created_at=record.created_at
             )
             db.add(model)
             db.commit()
+        finally:
+            db.close()
+
+    def save_batch(self, records: list[AttendanceRecord]) -> int:
+        if not records:
+            return 0
+        db = SessionLocal()
+        try:
+            inserted = 0
+            for offset in range(0, len(records), 500):
+                chunk = records[offset:offset + 500]
+                statement = insert(AttendanceTable).values(
+                    [
+                        {
+                            "user_id": record.user_id,
+                            "user_external_id": record.user_external_id,
+                            "device_id": record.device_id,
+                            "timestamp": record.timestamp,
+                            "created_at": record.created_at,
+                        }
+                        for record in chunk
+                    ]
+                )
+                statement = statement.on_duplicate_key_update(
+                    id=AttendanceTable.id
+                )
+                result = db.execute(statement)
+                inserted += result.rowcount
+            db.commit()
+            return inserted
+        except Exception:
+            db.rollback()
+            raise
         finally:
             db.close()
 

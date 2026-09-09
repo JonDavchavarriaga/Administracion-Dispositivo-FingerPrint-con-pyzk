@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
-from pathlib import Path
 
 load_dotenv()
 
@@ -21,23 +20,3 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(bind=engine)
 
 Base = declarative_base()
-
-
-def init_db():
-    """
-    Inicializa la base de datos ejecutando el schema.sql
-    NO crea tablas con SQLAlchemy
-    """
-    schema_path = Path(
-        "src/infrastructure/repositories/mysql/schema.sql"
-    )
-
-    if not schema_path.exists():
-        raise FileNotFoundError("schema.sql no encontrado")
-
-    with engine.connect() as connection:
-        sql = schema_path.read_text(encoding="utf-8")
-        for statement in sql.split(";"):
-            if statement.strip():
-                connection.execute(text(statement))
-        connection.commit()

@@ -4,3 +4,5 @@ pyzk
 sqlalchemy
 pymysql
 python-dotenv
+alembic
+celery[redis]

@@ -9,6 +9,10 @@ class AttendanceRepository(ABC):
         pass
 
     @abstractmethod
+    def save_batch(self, records: list[AttendanceRecord]) -> int:
+        pass
+
+    @abstractmethod
     def exists(self, user_id: int, device_id: int, timestamp) -> bool:
         pass
 
